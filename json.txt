@@ -1,0 +1,3 @@
+{"Elevador":"Elevador 1",
+        "Peso Maximo":"600",
+        "Andares":"4"}

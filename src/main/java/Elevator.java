@@ -1,3 +1,4 @@
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -14,6 +15,9 @@ public class Elevator implements Runnable {
     private ArrayList doorRequest;
     private Semaphore sem;
     private Buttons b;
+    private Reader reader= new Reader();
+    private Writer writer= new Writer();
+    private ArrayList imgPath= new ArrayList();
 
     public Elevator(Semaphore sem) {
         this.sem = sem;
@@ -56,35 +60,41 @@ public class Elevator implements Runnable {
     @Override
     public void run() {
         System.out.println(Thread.currentThread().toString());
-        try {
-            sem.acquire();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        System.out.println("Permits no elevator " + sem.availablePermits());
         ArrayList floor = new ArrayList();
-        floor.add(new Floor(1));
-        floor.add(new Floor(2));
-        floor.add(new Floor(3));
-        floor.add(new Floor(4));
+        imgPath.add("close.png");
+        imgPath.add("open.png");
+        for(int i=1; i<= reader.fileReader();i++){
+            floor.add(new Floor(i));
+        }
         this.floorList = floor;
         this.CURRENTFLOOR = (Floor) floorList.get(0);
         Buttons b = new Buttons(sem);
+        b.setImgPath((String) imgPath.get(1));
+        b.setLabelString(CURRENTFLOOR.toString());
         Thread t1 = new Thread(b);
         t1.start();
         while (b.isOn()) {
-            if (!b.getDoorRequest().isEmpty() && doorRequest!= b.getDoorRequest()) {
+            if (b.getDoorRequest().size()>0) {
                 doorRequest = b.getDoorRequest();
-                doors = (Doors) doorRequest.get(doorRequest.size()-1);
-                System.out.println("Portas estao: "+doors.getDoorState().toString());
-                while (doors.getDoorState() != DoorState.CLOSE) {
-                    try {
-                        Thread.sleep(1500);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                doors = ((Doors) doorRequest.get(doorRequest.size()-1));
+                b.setImgPath((String) imgPath.get(0));
+                if (doors.getDoorState() != DoorState.CLOSE) {
+                    while(doors.getDoorState()!=DoorState.CLOSE) {
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        doorRequest = b.getDoorRequest();
+                        doors = (Doors) doorRequest.get(doorRequest.size() - 1);
+                        if(doors.getDoorState()==DoorState.CLOSE)
+                            b.setImgPath((String) imgPath.get(0));
+                        else{
+                            b.setImgPath((String) imgPath.get(1));
+                        }
                     }
-                    doorRequest = b.getDoorRequest();
-                    doors = (Doors) doorRequest.get(doorRequest.size()-1);
+                    b.getDoorRequest().clear();
+                    doorRequest.clear();
                 }
             }
             if (requestList.isEmpty()) {
@@ -96,7 +106,12 @@ public class Elevator implements Runnable {
                 }
             } else {
                 doors.setDoorState(DoorState.CLOSE);
-                System.out.println("Portas estao: "+doors.getDoorState().toString());
+                b.setImgPath((String) imgPath.get(0));
+                try {
+                    Thread.sleep(1500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 requestList = b.getRequestList();
                 if (engine.getEngineState() == EngineState.UP) {
                     ArrayList tempRequestList = new ArrayList();
@@ -110,9 +125,9 @@ public class Elevator implements Runnable {
                     if (!tempRequestList.isEmpty()) {
                         CURRENTREQUEST.setFloor((int) tempRequestList.get(0));
                     }
-                    System.out.println("ANDAR ATUAL " + CURRENTFLOOR);
                     while (CURRENTFLOOR.getFloorId() != CURRENTREQUEST.getFloor()) {
                         CURRENTFLOOR.setFloorId(CURRENTFLOOR.getFloorId() + 1);
+                        b.setLabelString(CURRENTFLOOR.toString());
                         try {
                             Thread.sleep(1000);
                             System.out.print("..........");
@@ -122,16 +137,22 @@ public class Elevator implements Runnable {
                             e.printStackTrace();
                         }
                     }
-                    System.out.println("CHEGUEI PUTOS, ANDAR " + CURRENTFLOOR);
                     doors.setDoorState(DoorState.OPEN);
-                    System.out.println("Portas estao: "+doors.getDoorState().toString());
+                    b.setImgPath((String) imgPath.get(1));
+                    try {
+                        Thread.sleep(1500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     if (!tempRequestList.isEmpty()) {
                         for (int i = 0; i < requestList.size(); i++) {
+
                             Request tempRequest = (Request) requestList.get(i);
                             if (tempRequest.getFloor() == (int) tempRequestList.get(0)) {
                                 requestList.remove(i);
                             }
                         }
+                        writer.escritorMovimentos(tempRequestList.get(0).toString());
                         tempRequestList.remove(0);
                     } else {
                         engine.setEngineState(EngineState.DOWN);
@@ -152,6 +173,7 @@ public class Elevator implements Runnable {
                     System.out.println("ANDAR ATUAL " + CURRENTFLOOR);
                     while (CURRENTFLOOR.getFloorId() != CURRENTREQUEST.getFloor()) {
                         CURRENTFLOOR.setFloorId(CURRENTFLOOR.getFloorId() - 1);
+                        b.setLabelString(CURRENTFLOOR.toString());
                         try {
                             Thread.sleep(1000);
                             System.out.print("..........");
@@ -161,9 +183,13 @@ public class Elevator implements Runnable {
                             e.printStackTrace();
                         }
                     }
-                    System.out.println("CHEGUEI PUTOS, ANDAR " + CURRENTFLOOR);
                     doors.setDoorState(DoorState.OPEN);
-                    System.out.println("Portas estao: "+doors.getDoorState().toString());
+                    b.setImgPath((String) imgPath.get(1));
+                    try {
+                        Thread.sleep(1500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     if (!tempRequestList.isEmpty()) {
                         for (int i = 0; i < requestList.size(); i++) {
                             Request tempRequest = (Request) requestList.get(i);
@@ -171,6 +197,7 @@ public class Elevator implements Runnable {
                                 requestList.remove(i);
                             }
                         }
+                        writer.escritorMovimentos(tempRequestList.get(0).toString());
                         tempRequestList.remove(0);
                     } else {
                         engine.setEngineState(EngineState.UP);
@@ -180,8 +207,6 @@ public class Elevator implements Runnable {
             }
 
         }
-        t1.interrupt();
-        System.out.println(requestList.toString());
-        sem.release();
+        System.exit(0);
     }
 }

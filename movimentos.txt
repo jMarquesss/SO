@@ -1,0 +1,1 @@
+{"Entradas":15,"Andares visitados":[{"Andar":"1"},{"Andar":"2"},{"Andar":"2"},{"Andar":"4"},{"Andar":"2"},{"Andar":"1"},{"Andar":"2"},{"Andar":"4"},{"Andar":"2"},{"Andar":"4"},{"Andar":"2"},{"Andar":"2"},{"Andar":"4"},{"Andar":"2"},{"Andar":"1"}]}

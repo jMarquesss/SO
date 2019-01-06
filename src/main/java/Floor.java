@@ -15,8 +15,6 @@ public class Floor {
 
     @Override
     public String toString() {
-        return "Floor{" +
-                "floorId=" + floorId +
-                '}';
+        return "Andar atual: " + floorId;
     }
 }

@@ -1,42 +1,65 @@
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
-import javax.swing.JButton;
-import javax.swing.JFrame;
+import javax.imageio.ImageIO;
+import javax.swing.*;
 
 public class Buttons extends JFrame implements ActionListener, Runnable {
 
     private JButton[] buttonsArray = new JButton[4 + 3];
+    private String labelString;
     private ArrayList requestList = new ArrayList();
     private ArrayList doorRequest = new ArrayList();
     private boolean on = true;
     private Semaphore sem;
-
+    private Reader reader= new Reader();
+    private String imgPath;
     public Buttons(Semaphore sem) {
         this.sem = sem;
     }
 
     @Override
     public void run() {
-        createButtons(4);
+        createButtons(reader.fileReader());
         enableButtons(buttonsArray, true);
-        int x = 0;
-        int y = 50;
-        int w = 100;
-        int h = 60;
-        setLayout(null);
+        setTitle("Elevador");
+        setPreferredSize(new Dimension(500, 500));
+        setVisible(true);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setResizable(false);
+        JPanel panel = new JPanel();
+        JPanel image = new JPanel();
+        JLabel label = new JLabel();
+        label.setText(labelString);
+        add(label);
+        JLabel img = new JLabel(new ImageIcon(imgPath));
+        image.add(img);
+        panel.setLayout(new GridLayout(3,3));
         for (int i = 0; i < buttonsArray.length; i++) {
-            buttonsArray[i].setBounds(x * i, y * i, w, h);
-            add(buttonsArray[i]);
+            panel.add(buttonsArray[i]);
             buttonsArray[i].addActionListener(this);
         }
-        setTitle("Buttons");
-        setSize(300, 600);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setVisible(true);
+        setLayout(new BorderLayout());
+        add(panel, BorderLayout.SOUTH);
+        add(image, BorderLayout.CENTER);
+        pack();
+        while(isOn()){
+            try {
+                Thread.sleep(100);
+                img.setIcon(new ImageIcon (imgPath));
+                label.setText(labelString);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        //setSize(215, 730);
     }
 
     public void createButtons(int andares) {
@@ -83,6 +106,22 @@ public class Buttons extends JFrame implements ActionListener, Runnable {
             on = false;
         }
 
+    }
+
+    public String getImgPath() {
+        return imgPath;
+    }
+
+    public void setImgPath(String imgPath) {
+        this.imgPath = imgPath;
+    }
+
+    public String getLabelString() {
+        return labelString;
+    }
+
+    public void setLabelString(String labelString) {
+        this.labelString = labelString;
     }
 
     public ArrayList getDoorRequest() {
