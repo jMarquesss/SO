@@ -6,7 +6,7 @@ import java.util.concurrent.Semaphore;
 
 public class Elevator implements Runnable {
 
-    private Doors doors = new Doors(DoorState.CLOSE);
+    private Doors doors = new Doors(DoorState.CLOSED);
     private Engine engine = new Engine(EngineState.UP);
     private ArrayList floorList = new ArrayList();
     private Floor CURRENTFLOOR;
@@ -78,8 +78,13 @@ public class Elevator implements Runnable {
                 doorRequest = b.getDoorRequest();
                 doors = ((Doors) doorRequest.get(doorRequest.size()-1));
                 b.setImgPath((String) imgPath.get(0));
-                if (doors.getDoorState() != DoorState.CLOSE) {
-                    while(doors.getDoorState()!=DoorState.CLOSE) {
+                if (doors.getDoorState() != DoorState.CLOSED) {
+                    try {
+                        sem.acquire();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    while(doors.getDoorState()!=DoorState.CLOSED) {
                         try {
                             Thread.sleep(1000);
                         } catch (InterruptedException e) {
@@ -87,12 +92,14 @@ public class Elevator implements Runnable {
                         }
                         doorRequest = b.getDoorRequest();
                         doors = (Doors) doorRequest.get(doorRequest.size() - 1);
-                        if(doors.getDoorState()==DoorState.CLOSE)
+                        if(doors.getDoorState()==DoorState.CLOSED)
                             b.setImgPath((String) imgPath.get(0));
                         else{
                             b.setImgPath((String) imgPath.get(1));
                         }
+
                     }
+                    sem.release();
                     b.getDoorRequest().clear();
                     doorRequest.clear();
                 }
@@ -105,7 +112,7 @@ public class Elevator implements Runnable {
                     e.printStackTrace();
                 }
             } else {
-                doors.setDoorState(DoorState.CLOSE);
+                doors.setDoorState(DoorState.CLOSED);
                 b.setImgPath((String) imgPath.get(0));
                 try {
                     Thread.sleep(1500);

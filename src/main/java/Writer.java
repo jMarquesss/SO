@@ -9,7 +9,6 @@ public class Writer {
     private Reader reader = new Reader();
 
     public boolean escritorMovimentos(String movimentos) {
-
         JSONObject jsonObject = new JSONObject();
         JSONArray arrayAndar;
         if (reader.andaresReader() != null) {

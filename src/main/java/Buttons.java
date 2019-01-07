@@ -100,7 +100,7 @@ public class Buttons extends JFrame implements ActionListener, Runnable {
             doorRequest.add(new Doors(DoorState.OPEN));
         } else if (e.getSource() == buttonsArray[5]) {
             System.out.println("Carreguei no botao Fechar");
-            doorRequest.add(new Doors(DoorState.CLOSE));
+            doorRequest.add(new Doors(DoorState.CLOSED));
         } else {
             System.out.println("Carreguei no botao Encerrar programa");
             on = false;
